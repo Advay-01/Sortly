@@ -91,9 +91,10 @@ def main():
                 assert len(files) == 2, files
                 for file in files:
                     assert "ocr" in file["evidence_sources"], file
-                    assert "Thermodynamics" in file["evidence_excerpt"], file
+                    assert "Physics Lecture Notes" in file["evidence_excerpt"], file
                     assert file["target_path"] == "Study/Physics", file
                 assert seen
+                assert all("Thermodynamics" in item["content"] for item in seen), seen
                 print("Frozen JPEG and scanned PDF OCR passed; fixture LLM only, no files moved.")
             finally:
                 process.terminate()
