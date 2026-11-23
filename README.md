@@ -91,7 +91,7 @@ Sortly can extract text or metadata from:
 
 - **Documents:** PDF, DOCX, PPTX, XLSX/XLSM, and EPUB.
 - **Text and code:** common source formats, Markdown, CSV, JSON, XML, configuration files, subtitles, chess PGN, and patch/diff files.
-- **Images:** supported image formats contribute dimensions and available metadata. The current pipeline does not send image pixels for visual classification.
+- **Images:** JPEG/JPG, PNG, BMP, TIFF and WebP contribute locally recognized text, dimensions and available metadata. Image pixels are not sent to the classification provider.
 - **Archives:** bounded member listings from ZIP, TAR, GZIP/TGZ, and RAR. Archives are not unpacked.
 
 Detection checks file signatures and supported text structures. A proposed extension correction is shown explicitly in review and counted at confirmation. **Changing an extension does not convert file contents.** Generic readable text alone is not treated as proof that an unfamiliar extension is wrong.
@@ -110,7 +110,7 @@ Files are processed locally for extraction; configuring a cloud LLM sends allowe
 - Warnings explain unusual plans, uncertain evidence, and potentially risky command text. Sortly never runs commands found inside scanned files.
 - Cancelling stops the frontend request and discards late results; it may not stop a model request already running on the server.
 - Very short but meaningful files can still receive overly cautious confidence scores. Chat does not yet receive all confidence, selection, and scan-skip details for diagnostic questions.
-- OCR requires optional external tooling and is not bundled. Scanned PDFs, image subjects, audio/video contents, and classic binary Office formats have limited or unavailable evidence.
+- Local OCR reads JPEG images and the first two pages of image-only PDFs automatically. It uses wheel-bundled RapidOCR models and PDFium, without a separate Tesseract or Poppler installation or runtime model download. Raster images are limited to 2400 pixels on their longest edge and extracted evidence to the existing character budget. OCR can make mistakes; inspect evidence before confirming changes. Handwriting, image subjects without readable text, audio/video contents, and classic binary Office formats have limited or unavailable evidence.
 - Normal organization leaves emptied source folders behind. Undo prunes folders left empty by restoration. There is no automatic empty-folder cleanup feature.
 - There is no verified duplicate-finder UI or automatic deletion. Classification quality depends on the model and available evidence.
 
@@ -134,6 +134,8 @@ python -m venv .venv
 npm ci
 npm --prefix frontend ci
 ```
+
+OCR dependencies are included in `requirements.txt` and desktop sidecar builds. Existing source installations should reinstall requirements after updating. OCR text passes through the same local sensitive-content checks and redaction as other extracted text. The pinned `rapidocr-onnxruntime` wheel includes its models for offline use; the newer `rapidocr` package uses a different API and model provisioning flow. Existing Tesseract/Poppler installations remain a fallback if the built-in engine fails.
 
 Make sure `python` resolves to an installed interpreter rather than a Windows Store execution alias. Copy `.env.example` to `.env` only if you want environment-based provider configuration; the desktop Providers screen can store configuration instead.
 

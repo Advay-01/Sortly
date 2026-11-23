@@ -18,7 +18,7 @@ from app.core.privacy import detect_sensitive, detect_suspicious_commands, redac
 from app.models.schemas import FileInfo
 from app.core.safety import snapshot_file
 
-EVIDENCE_VERSION = 6
+EVIDENCE_VERSION = 7
 _XMP_LIMIT = 256 * 1024
 _XMP_MM = "http://ns.adobe.com/xap/1.0/mm/"
 _XMP_REF = "http://ns.adobe.com/xap/1.0/sType/ResourceRef#"
@@ -317,6 +317,14 @@ def _document_metadata(path: Path, extension: str) -> dict:
 
 
 def _ocr_image(path: Path, max_chars: int) -> tuple[str, bool]:
+    try:
+        from app.core.ocr import image_text
+
+        text = image_text(path, max_chars)
+        return text, bool(text)
+    except Exception:
+        # Retain support for installations using an external Tesseract.
+        pass
     executable = shutil.which("tesseract")
     if not executable:
         return "", False
@@ -340,7 +348,13 @@ def _ocr_image(path: Path, max_chars: int) -> tuple[str, bool]:
 
 
 def _ocr_pdf(path: Path, max_chars: int) -> tuple[str, bool]:
-    """Inspect at most two low-resolution pages with already installed local tools."""
+    """Inspect at most two pages locally, with legacy external tools as fallback."""
+    try:
+        from app.core.ocr import pdf_text
+
+        return pdf_text(path, max_chars)
+    except Exception:
+        pass
     renderer = shutil.which("pdftoppm")
     if not renderer or not shutil.which("tesseract"):
         return "", False
@@ -412,15 +426,16 @@ def extract_evidence(
         ocr_content, ocr_used = _ocr_pdf(path, max_chars)
         if ocr_content:
             content = ocr_content
-            warnings.append("Text came from optional PDF OCR of up to two pages and should be reviewed.")
+            warnings.append("Text came from local PDF OCR of up to two pages and should be reviewed.")
         else:
-            warnings.append("No PDF text was extracted. Optional local Poppler and Tesseract OCR may be required; review this file.")
-    if len(content.strip()) < 20 and extension in {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp"}:
-        content, ocr_used = _ocr_image(path, max_chars)
-        if content:
-            warnings.append("Text came from optional OCR and should be reviewed.")
-        elif extension:
-            warnings.append("No OCR runtime is available for this image.")
+            warnings.append("PDF OCR found no readable text or could not run. Check OCR dependencies and review this file.")
+    if len(content.strip()) < 20 and signature_type in {".jpg", ".png", ".bmp", ".tiff", ".webp"}:
+        ocr_content, ocr_used = _ocr_image(path, max_chars)
+        if ocr_content:
+            content = ocr_content
+            warnings.append("Text came from local OCR and should be reviewed.")
+        else:
+            warnings.append("Image OCR found no readable text or could not run. Check OCR dependencies and review this file.")
 
     sources = []
     if content:
