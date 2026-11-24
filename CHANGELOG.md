@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.0 - 2026-11-24
+
+- Added automatic local OCR for JPEG/JPG, PNG, BMP, TIFF and WebP images and the first two pages of scanned PDFs. Recognized text supports content-based categories and grounded filenames.
+- Included RapidOCR model files and PDFium rendering in desktop builds, removing the need for separate Tesseract or Poppler installations. OCR works offline; AI classification still uses the configured provider.
+- OCR evidence passes through existing sensitive-content checks, redaction and review. Older extraction caches are invalidated so previously unreadable images can be analyzed again.
+- Limited raster dimensions and evidence length; retained external OCR tools as a fallback. OCR can make recognition errors. Images are processed sequentially on CPU, so large folders can take time. Parallel OCR and detailed progress reporting are not included in this release.
+- Verified 593 backend tests and 53 subtests, plus real JPEG and scanned-PDF recognition through the packaged Windows service with a local fixture provider. Native release CI repeats backend, frontend, installer and startup checks.
+
 ## 2.0.1 - 2026-10-29
 
 ### Missing local assets
