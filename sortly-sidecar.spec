@@ -17,7 +17,7 @@ hiddenimports = (
     + collect_submodules("pypdf._crypt_providers")
     + collect_submodules("litellm")
 )
-datas = collect_data_files("litellm")
+datas = collect_data_files("litellm") + collect_data_files("rapidocr_onnxruntime")
 if sys.platform != "win32":
     hiddenimports += collect_submodules("keyring.backends.macOS" if sys.platform == "darwin" else "keyring.backends.SecretService")
 
@@ -34,7 +34,7 @@ a = Analysis(
     # Python ML runtimes and model weights out of the desktop package.
     excludes=[
         "sentence_transformers", "transformers", "torch", "torchvision", "torchaudio",
-        "numpy", "scipy", "sklearn",
+        "scipy", "sklearn",
     ],
     noarchive=False,
     optimize=0,

@@ -40,7 +40,7 @@ jobs:
             frontend/package-lock.json
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version: '3.12'
           cache: pip
           cache-dependency-path: |
             requirements.txt
@@ -87,6 +87,9 @@ jobs:
           else
             python scripts/smoke-sidecar.py --executable "$service" --output build/sidecar-smoke.json
           fi
+      - name: Frozen OCR regression
+        if: runner.os == 'Windows'
+        run: python scripts/smoke-ocr.py --executable dist/sortly-api/sortly-api.exe
       - name: Native Tauri installers
         run: npm run tauri -- build
       - name: Rust startup tests

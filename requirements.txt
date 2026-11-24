@@ -8,6 +8,9 @@ python-pptx
 openpyxl
 pillow
 pillow-heif
+# This version includes its OCR models in the wheel for offline operation.
+rapidocr-onnxruntime==1.4.4
+pypdfium2>=4.30,<6
 rarfile
 fastapi
 uvicorn[standard]
